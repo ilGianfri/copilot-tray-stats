@@ -143,7 +143,8 @@ public partial class SettingsViewModel : ObservableObject
         if (key is null) return;
         if (enabled)
         {
-            var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            var exePath = Environment.ProcessPath
+                ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
             if (exePath is not null)
                 key.SetValue(StartupKey, $"\"{exePath}\"");
         }
