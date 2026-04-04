@@ -18,20 +18,28 @@ public partial class App : Application
     private MainWindow? _popup;
     private MainViewModel? _viewModel;
     private SettingsViewModel? _settingsViewModel;
+    private CopilotApiService? _apiService;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
         GitHubAuthService authService = new();
-        CopilotApiService apiService = new(authService);
+        _apiService = new CopilotApiService(authService);
+        CopilotApiService apiService = _apiService;
 
         SettingsService settingsService = new();
         AppSettings settings = settingsService.Load();
 
         _viewModel = new MainViewModel(apiService);
         _viewModel.SetRefreshInterval(settings.RefreshIntervalMinutes);
+        _viewModel.OnSuccessfulRefresh = settingsService.SaveState;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+
+        // Restore last-known values immediately so the UI isn't blank on first open
+        CachedState? cached = settingsService.LoadState();
+        if (cached is not null)
+            _viewModel.ApplyCachedState(cached);
 
         _settingsViewModel = new SettingsViewModel(settingsService);
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
@@ -105,18 +113,27 @@ public partial class App : Application
             _popup.Show();
             _popup.PositionNearTray();
             _popup.Activate();
+
+            // Refresh if data is older than the configured interval
+            if (_viewModel is not null && _settingsViewModel is not null
+                && _viewModel.IsStale(_settingsViewModel.SelectedRefreshOption.Minutes))
+            {
+                _ = _viewModel.RefreshCommand.ExecuteAsync(null);
+            }
         }
     }
 
     private void ExitApp()
     {
         _trayIcon?.Dispose();
+        _apiService?.Dispose();
         Shutdown();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _trayIcon?.Dispose();
+        _apiService?.Dispose();
         base.OnExit(e);
     }
 

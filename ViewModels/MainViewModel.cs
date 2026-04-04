@@ -1,4 +1,4 @@
-using System.Windows.Threading;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CopilotTrayStats.Models;
@@ -11,19 +11,36 @@ public enum UsageLevel { Good, Warning, Critical, Unknown }
 public partial class MainViewModel : ObservableObject
 {
     private readonly CopilotApiService _apiService;
-    private readonly DispatcherTimer _refreshTimer;
+    private CancellationTokenSource? _timerCts;
     private CancellationTokenSource? _refreshCts;
+    private int _refreshIntervalMinutes = 5;
+    private DateTime? _lastRefreshTime;
+
+    public Action<CachedState>? OnSuccessfulRefresh { get; set; }
 
     public MainViewModel(CopilotApiService apiService)
     {
         _apiService = apiService;
+        StartRefreshLoop();
+    }
 
-        _refreshTimer = new DispatcherTimer
+    private void StartRefreshLoop()
+    {
+        _timerCts?.Cancel();
+        _timerCts?.Dispose();
+        _timerCts = new CancellationTokenSource();
+        _ = RunRefreshLoopAsync(_timerCts.Token);
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(_refreshIntervalMinutes));
+        try
         {
-            Interval = TimeSpan.FromMinutes(5)
-        };
-        _refreshTimer.Tick += async (_, _) => await RefreshAsync();
-        _refreshTimer.Start();
+            while (await timer.WaitForNextTickAsync(ct))
+                _ = Application.Current.Dispatcher.InvokeAsync(RefreshAsync);
+        }
+        catch (OperationCanceledException) { }
     }
 
     // ── Observable Properties ────────────────────────────────────────────────
@@ -111,6 +128,32 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    public bool IsStale(int minutes) =>
+        _lastRefreshTime is null || (DateTime.Now - _lastRefreshTime.Value).TotalMinutes >= minutes;
+
+    public void ApplyCachedState(CachedState state)
+    {
+        Username             = state.Username;
+        PlanType             = state.PlanType;
+        PremiumRemaining     = state.PremiumRemaining;
+        PremiumTotal         = state.PremiumTotal;
+        PremiumUsed          = state.PremiumUsed;
+        ResetAt              = state.ResetAt;
+        IsUnlimited          = state.IsUnlimited;
+        OverageCount         = state.OverageCount;
+        IsMcpEnabled         = state.IsMcpEnabled;
+        IsChatEnabled        = state.IsChatEnabled;
+        PercentRemainingLabel = state.PercentRemainingLabel;
+        ChatStatus           = state.ChatStatus;
+        CompletionsStatus    = state.CompletionsStatus;
+        RawJson              = state.RawJson;
+        LastRefreshed        = state.LastRefreshed;
+        _lastRefreshTime     = state.LastRefreshTime;
+        OnPropertyChanged(nameof(UsageLevel));
+        OnPropertyChanged(nameof(UsagePercent));
+        UpdateTooltip();
+    }
+
     // ── Commands ─────────────────────────────────────────────────────────────
 
     [RelayCommand]
@@ -155,10 +198,31 @@ public partial class MainViewModel : ObservableObject
             IsChatEnabled = data.ChatEnabled ?? false;
 
             LastRefreshed = DateTime.Now.ToString("HH:mm:ss");
+            _lastRefreshTime = DateTime.Now;
 
             UpdateTooltip();
             OnPropertyChanged(nameof(UsageLevel));
             OnPropertyChanged(nameof(UsagePercent));
+
+            OnSuccessfulRefresh?.Invoke(new CachedState
+            {
+                Username             = Username,
+                PlanType             = PlanType,
+                PremiumRemaining     = PremiumRemaining,
+                PremiumTotal         = PremiumTotal,
+                PremiumUsed          = PremiumUsed,
+                ResetAt              = ResetAt,
+                IsUnlimited          = IsUnlimited,
+                OverageCount         = OverageCount,
+                IsMcpEnabled         = IsMcpEnabled,
+                IsChatEnabled        = IsChatEnabled,
+                PercentRemainingLabel = PercentRemainingLabel,
+                ChatStatus           = ChatStatus,
+                CompletionsStatus    = CompletionsStatus,
+                RawJson              = RawJson,
+                LastRefreshed        = LastRefreshed,
+                LastRefreshTime      = _lastRefreshTime.Value,
+            });
         }
         catch (OperationCanceledException)
         {
@@ -183,7 +247,8 @@ public partial class MainViewModel : ObservableObject
 
     public void SetRefreshInterval(int minutes)
     {
-        _refreshTimer.Interval = TimeSpan.FromMinutes(minutes);
+        _refreshIntervalMinutes = minutes;
+        StartRefreshLoop();
     }
 
     [RelayCommand]

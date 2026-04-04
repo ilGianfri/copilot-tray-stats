@@ -5,7 +5,7 @@ using CopilotTrayStats.Models;
 
 namespace CopilotTrayStats.Services;
 
-public class CopilotApiService
+public class CopilotApiService : IDisposable
 {
     private const string ApiUrl = "https://api.github.com/copilot_internal/user";
 
@@ -71,4 +71,6 @@ public class CopilotApiService
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return _httpClient.SendAsync(request, ct);
     }
+
+    public void Dispose() => _httpClient.Dispose();
 }
