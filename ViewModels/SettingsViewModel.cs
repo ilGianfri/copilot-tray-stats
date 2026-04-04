@@ -42,6 +42,19 @@ public partial class SettingsViewModel : ObservableObject
     public Action<int>? RefreshIntervalChanged { get; set; }
     public Action? CloseRequested { get; set; }
 
+    public static string AppVersion
+    {
+        get
+        {
+#if DEBUG
+            return "DEV";
+#else
+            var v = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+            return v is null ? "—" : $"{v.Major}.{v.Minor}.{v.Build}";
+#endif
+        }
+    }
+
     [RelayCommand]
     private void Save()
     {

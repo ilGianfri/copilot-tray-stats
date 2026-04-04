@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: version
+        shell: pwsh
+        run: |
+          $latest = git tag --list 'v*' --sort=-v:refname | Select-Object -First 1
+          if (-not $latest) { $latest = 'v0.0.0' }
+          $parts = $latest.TrimStart('v') -split '\.'
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1]
+          $patch = [int]$parts[2] + 1
+          $version = "$major.$minor.$patch"
+          $tag = "v$version"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "tag=$tag"         >> $env:GITHUB_OUTPUT
+          Write-Host "Next version: $tag"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish
+        run: |
+          dotnet publish CopilotTrayStats.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:DebugType=none `
+            -p:Version=${{ steps.version.outputs.version }} `
+            -o publish
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: publish/CopilotTrayStats.exe
