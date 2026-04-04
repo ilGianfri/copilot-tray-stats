@@ -1,6 +1,7 @@
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CopilotTrayStats.Models;
 using CopilotTrayStats.Services;
 
 namespace CopilotTrayStats.ViewModels;
@@ -122,13 +123,13 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            var (data, raw) = await _apiService.GetUserDataAsync();
+            (CopilotUserResponse? data, string? raw) = await _apiService.GetUserDataAsync();
             RawJson = raw;
 
             Username = data.Login ?? "unknown";
             PlanType = FormatPlan(data.CopilotPlan);
 
-            var premium = data.QuotaSnapshots?.PremiumInteractions;
+            QuotaEntry? premium = data.QuotaSnapshots?.PremiumInteractions;
             IsUnlimited = premium?.Unlimited ?? false;
 
             PremiumTotal = premium?.Entitlement ?? 0;
@@ -141,10 +142,10 @@ public partial class MainViewModel : ObservableObject
             OverageCount = premium?.OverageCount ?? 0;
             PercentRemainingLabel = premium?.PercentRemaining is double pct ? $"({pct:F1}%)" : "";
 
-            var chat = data.QuotaSnapshots?.Chat;
+            QuotaEntry? chat = data.QuotaSnapshots?.Chat;
             ChatStatus = chat?.Unlimited == true ? "\u221e" : (chat?.Remaining?.ToString() ?? "\u2014");
 
-            var completions = data.QuotaSnapshots?.Completions;
+            QuotaEntry? completions = data.QuotaSnapshots?.Completions;
             CompletionsStatus = completions?.Unlimited == true ? "\u221e" : (completions?.Remaining?.ToString() ?? "\u2014");
 
             IsMcpEnabled = data.IsMcpEnabled ?? false;
@@ -212,10 +213,10 @@ public partial class MainViewModel : ObservableObject
     private static string FormatResetDate(string? iso)
     {
         if (string.IsNullOrWhiteSpace(iso)) return "—";
-        if (DateTimeOffset.TryParse(iso, out var dto))
+        if (DateTimeOffset.TryParse(iso, out DateTimeOffset dto))
         {
-            var local = dto.LocalDateTime;
-            var diff = local - DateTime.Now;
+            DateTime local = dto.LocalDateTime;
+            TimeSpan diff = local - DateTime.Now;
             var dateFormat = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
             // Remove year from date format
             dateFormat = dateFormat.Replace("yyyy", "").Replace("yy", "").Trim().TrimEnd('/').TrimEnd('.').Trim();

@@ -15,6 +15,11 @@ public class SettingsService
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "CopilotTrayStats", "settings.json");
 
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true
+    };
+
     public AppSettings Load()
     {
         try
@@ -32,7 +37,6 @@ public class SettingsService
     public void Save(AppSettings settings)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-        File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings,
-            new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, SerializerOptions));
     }
 }

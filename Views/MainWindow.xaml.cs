@@ -59,8 +59,9 @@ public partial class MainWindow : Window
 
     public void PositionNearTray()
     {
+        UpdateLayout();
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - 12;
-        Top = workArea.Bottom - Height - 12;
+        Left = workArea.Right - ActualWidth - 12;
+        Top = workArea.Bottom - ActualHeight - 12;
     }
 }

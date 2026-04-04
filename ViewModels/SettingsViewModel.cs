@@ -16,7 +16,7 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(SettingsService settingsService)
     {
         _settingsService = settingsService;
-        var s = settingsService.Load();
+        AppSettings s = settingsService.Load();
         _runOnStartup = GetStartupEnabled();
         _selectedRefreshOption = RefreshOptions.Find(o => o.Minutes == s.RefreshIntervalMinutes)
             ?? RefreshOptions.Find(o => o.Minutes == 5)!;
@@ -60,13 +60,13 @@ public partial class SettingsViewModel : ObservableObject
 
     private static bool GetStartupEnabled()
     {
-        using var key = Registry.CurrentUser.OpenSubKey(StartupRegPath, false);
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(StartupRegPath, false);
         return key?.GetValue(StartupKey) is not null;
     }
 
     private static void SetStartupEnabled(bool enabled)
     {
-        using var key = Registry.CurrentUser.OpenSubKey(StartupRegPath, true);
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(StartupRegPath, true);
         if (key is null) return;
         if (enabled)
         {

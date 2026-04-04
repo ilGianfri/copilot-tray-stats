@@ -9,6 +9,11 @@ public class CopilotApiService
 {
     private const string ApiUrl = "https://api.github.com/copilot_internal/user";
 
+    // Serialize options - avoids creating new options object on every call, since we only need it for pretty-printing debug info
+    private static readonly JsonSerializerOptions s_prettyPrintOptions = new() { WriteIndented = true };
+    // Deserialize options - ignore case to be resilient to any changes in GitHub's JSON property naming
+    private static readonly JsonSerializerOptions s_deserializeOptions = new() { PropertyNameCaseInsensitive = true };
+
     private readonly GitHubAuthService _authService;
     private readonly HttpClient _httpClient;
 
@@ -44,12 +49,11 @@ public class CopilotApiService
         try
         {
             using var doc = JsonDocument.Parse(json);
-            prettyJson = JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true });
+            prettyJson = JsonSerializer.Serialize(doc, s_prettyPrintOptions);
         }
         catch { /* keep raw */ }
 
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var result = JsonSerializer.Deserialize<CopilotUserResponse>(json, options);
+        CopilotUserResponse? result = JsonSerializer.Deserialize<CopilotUserResponse>(json, s_deserializeOptions);
 
         return (result ?? throw new InvalidOperationException("Empty response from GitHub API."), prettyJson);
     }

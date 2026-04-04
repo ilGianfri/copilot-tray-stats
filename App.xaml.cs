@@ -24,7 +24,7 @@ public partial class App : Application
         var apiService  = new CopilotApiService(authService);
 
         var settingsService = new SettingsService();
-        var settings = settingsService.Load();
+        AppSettings settings = settingsService.Load();
 
         _viewModel = new MainViewModel(apiService);
         _viewModel.SetRefreshInterval(settings.RefreshIntervalMinutes);
@@ -75,7 +75,7 @@ public partial class App : Application
 
         if (e.PropertyName is nameof(MainViewModel.UsageLevel))
         {
-            var color = _viewModel.UsageLevel switch
+            Color color = _viewModel.UsageLevel switch
             {
                 UsageLevel.Good     => Color.FromRgb(46, 160, 67),
                 UsageLevel.Warning  => Color.FromRgb(210, 153, 34),
@@ -96,8 +96,8 @@ public partial class App : Application
         }
         else
         {
-            _popup.PositionNearTray();
             _popup.Show();
+            _popup.PositionNearTray();
             _popup.Activate();
         }
     }
@@ -147,7 +147,7 @@ public partial class App : Application
         brush.Freeze();
 
         var visual = new DrawingVisual();
-        using (var dc = visual.RenderOpen())
+        using (DrawingContext dc = visual.RenderOpen())
         {
             double scale = size / viewBox;
             dc.PushTransform(new ScaleTransform(scale, scale));
