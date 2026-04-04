@@ -65,7 +65,12 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (_updateAvailable && (_pendingDownloadUrl ?? _pendingReleaseUrl) is string url)
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            if (Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) &&
+                uri.Scheme == Uri.UriSchemeHttps &&
+                uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
             return;
         }
 
