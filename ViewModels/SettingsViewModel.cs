@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CopilotTrayStats.Services;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace CopilotTrayStats.ViewModels;
 
@@ -10,12 +11,14 @@ public record RefreshOption(int Minutes, string Label);
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
+    private readonly UpdateService _updateService;
     private const string StartupKey = "CopilotTrayStats";
     private const string StartupRegPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
-    public SettingsViewModel(SettingsService settingsService)
+    public SettingsViewModel(SettingsService settingsService, UpdateService updateService)
     {
         _settingsService = settingsService;
+        _updateService = updateService;
         AppSettings s = settingsService.Load();
         _runOnStartup = GetStartupEnabled();
         _selectedRefreshOption = RefreshOptions.Find(o => o.Minutes == s.RefreshIntervalMinutes)
@@ -41,6 +44,58 @@ public partial class SettingsViewModel : ObservableObject
 
     public Action<int>? RefreshIntervalChanged { get; set; }
     public Action? CloseRequested { get; set; }
+
+    // ── Update checking ──────────────────────────────────────────────────────
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UpdateButtonLabel))]
+    private string _updateStatus = "";
+
+    [ObservableProperty]
+    private bool _isCheckingUpdate;
+
+    private string? _pendingDownloadUrl;
+    private string? _pendingReleaseUrl;
+    private bool _updateAvailable;
+
+    public string UpdateButtonLabel => _updateAvailable ? "Download update" : "Check for updates";
+
+    [RelayCommand]
+    private async Task CheckForUpdatesAsync()
+    {
+        if (_updateAvailable && (_pendingDownloadUrl ?? _pendingReleaseUrl) is string url)
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            return;
+        }
+
+        IsCheckingUpdate = true;
+        UpdateStatus = "Checking…";
+        try
+        {
+            var info = await _updateService.CheckForUpdateAsync();
+            if (info is null)
+            {
+                UpdateStatus = "You're up to date.";
+            }
+            else
+            {
+                _updateAvailable = true;
+                _pendingDownloadUrl = info.DownloadUrl;
+                _pendingReleaseUrl  = info.ReleasePageUrl;
+                UpdateStatus = $"v{info.Version} is available!";
+                OnPropertyChanged(nameof(UpdateButtonLabel));
+            }
+        }
+        catch
+        {
+            UpdateStatus = "Could not check for updates.";
+        }
+        finally
+        {
+            IsCheckingUpdate = false;
+        }
+    }
 
     public static string AppVersion
     {

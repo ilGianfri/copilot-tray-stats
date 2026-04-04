@@ -104,6 +104,27 @@
                             Command="{Binding SaveCommand}"/>
                 </StackPanel>
 
+                <!-- Update row -->
+                <Border Background="{StaticResource SubtleBg}" CornerRadius="6"
+                        Padding="12,10" Margin="0,12,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontSize="11" Text="{Binding UpdateStatus}"/>
+                        <Button Grid.Column="1" Padding="12,5" Cursor="Hand"
+                                Content="{Binding UpdateButtonLabel}"
+                                Background="Transparent"
+                                Foreground="{StaticResource TextSecondary}"
+                                BorderBrush="{StaticResource BorderColor}" BorderThickness="1"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                IsEnabled="{Binding IsCheckingUpdate, Converter={StaticResource InvertBool}}"/>
+                    </Grid>
+                </Border>
+
                 <!-- Version footer -->
                 <TextBlock HorizontalAlignment="Center" Margin="0,12,0,0"
                            Foreground="{StaticResource TextSecondary}" FontSize="10">

@@ -22,6 +22,7 @@ public partial class App : Application
     private UsageHistoryViewModel? _usageHistoryViewModel;
     private CopilotApiService? _apiService;
     private UsageHistoryService? _historyService;
+    private UpdateService? _updateService;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -58,7 +59,8 @@ public partial class App : Application
             });
         };
 
-        _settingsViewModel = new SettingsViewModel(settingsService);
+        _updateService = new UpdateService(authService);
+        _settingsViewModel = new SettingsViewModel(settingsService, _updateService);
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
 
         _usageHistoryViewModel = new UsageHistoryViewModel(historyService);
@@ -147,6 +149,7 @@ public partial class App : Application
     {
         _trayIcon?.Dispose();
         _apiService?.Dispose();
+        _updateService?.Dispose();
         Shutdown();
     }
 
@@ -154,6 +157,7 @@ public partial class App : Application
     {
         _trayIcon?.Dispose();
         _apiService?.Dispose();
+        _updateService?.Dispose();
         base.OnExit(e);
     }
 
