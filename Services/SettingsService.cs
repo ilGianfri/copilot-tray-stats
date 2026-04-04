@@ -27,6 +27,7 @@ public class CachedState
     public string RawJson { get; set; } = "";
     public string LastRefreshed { get; set; } = "";
     public DateTime LastRefreshTime { get; set; }
+    public string? QuotaResetDateUtc { get; set; }
 }
 
 public class SettingsService

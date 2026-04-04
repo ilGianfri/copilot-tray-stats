@@ -9,6 +9,7 @@ public partial class MainWindow : Window
     private int _copilotIconClickCount;
 
     public SettingsViewModel? SettingsViewModel { get; set; }
+    public UsageHistoryViewModel? UsageHistoryViewModel { get; set; }
 
     public MainWindow()
     {
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
     private void Window_Deactivated(object sender, EventArgs e)
     {
         _copilotIconClickCount = 0;
+        HistoryPanel.Visibility = Visibility.Collapsed;
         Hide();
     }
 
@@ -37,6 +39,41 @@ public partial class MainWindow : Window
             if (DataContext is MainViewModel vm)
                 vm.IsDebugVisible = !vm.IsDebugVisible;
         }
+    }
+
+    private void ChartButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (HistoryPanel.Visibility == Visibility.Visible)
+        {
+            HistoryPanel.Visibility = Visibility.Collapsed;
+            PositionNearTray();
+            return;
+        }
+
+        if (UsageHistoryViewModel is null) return;
+        UsageHistoryViewModel.Reload();
+
+        BarsItemsControl.ItemsSource = UsageHistoryViewModel.Bars;
+        if (UsageHistoryViewModel.Bars.Count == 0)
+        {
+            HistoryEmptyText.Visibility = Visibility.Visible;
+            HistorySubtitle.Text = "Since last reset — no data recorded yet";
+        }
+        else
+        {
+            HistoryEmptyText.Visibility = Visibility.Collapsed;
+            int total = UsageHistoryViewModel.TotalUsed;
+            HistorySubtitle.Text = $"Since last reset — {total} request{(total == 1 ? "" : "s")} used";
+        }
+
+        HistoryPanel.Visibility = Visibility.Visible;
+        PositionNearTray();
+    }
+
+    private void CloseHistoryPanel_Click(object sender, RoutedEventArgs e)
+    {
+        HistoryPanel.Visibility = Visibility.Collapsed;
+        PositionNearTray();
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:CopilotTrayStats.ViewModels"
         Title="Copilot Stats"
-        Width="360" SizeToContent="Height"
+        SizeToContent="WidthAndHeight"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="None"
@@ -34,16 +34,118 @@
         </Style>
     </Window.Resources>
 
-    <!-- Drop shadow container -->
-    <Border Margin="8" CornerRadius="8"
-            Background="{StaticResource CardBg}"
-            BorderBrush="{StaticResource BorderColor}"
-            BorderThickness="1">
-        <Border.Effect>
-            <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.6" ShadowDepth="4"/>
-        </Border.Effect>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel>
+        <!-- ── History panel (left, toggled by chart button) ── -->
+        <Border x:Name="HistoryPanel" Grid.Column="0" Width="280" Margin="8,8,4,8"
+                Visibility="Collapsed" CornerRadius="8"
+                Background="{StaticResource CardBg}"
+                BorderBrush="{StaticResource BorderColor}"
+                BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.6" ShadowDepth="4"/>
+            </Border.Effect>
+            <StackPanel>
+                <!-- Header -->
+                <Border Background="{StaticResource SubtleBg}" CornerRadius="8,8,0,0" Padding="14,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Usage History"
+                                       Foreground="{StaticResource TextPrimary}"
+                                       FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="HistorySubtitle"
+                                       Foreground="{StaticResource TextSecondary}"
+                                       FontSize="10" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="✕" Width="22" Height="22"
+                                Background="Transparent" Foreground="{StaticResource TextSecondary}"
+                                BorderThickness="0" FontSize="11" Cursor="Hand"
+                                Click="CloseHistoryPanel_Click"/>
+                    </Grid>
+                </Border>
+                <!-- Chart area -->
+                <StackPanel Margin="12,10,12,12">
+                    <Border Background="{StaticResource SubtleBg}" CornerRadius="6"
+                            Padding="12,12,12,8" MinHeight="130">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl x:Name="BarsItemsControl">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Width="32" Margin="2,0">
+                                            <Grid Height="100">
+                                                <Border VerticalAlignment="Bottom"
+                                                        Height="{Binding BarHeight}"
+                                                        MinHeight="2"
+                                                        CornerRadius="2,2,0,0"
+                                                        ToolTip="{Binding Tooltip}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="{StaticResource TextSecondary}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                                    <Setter Property="Background" Value="{StaticResource TextPrimary}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="{Binding DateLabel}"
+                                                       FontSize="9" HorizontalAlignment="Center"
+                                                       Margin="0,4,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <TextBlock x:Name="HistoryEmptyText"
+                               Text="No usage data yet. Data is recorded each time the stats refresh."
+                               Foreground="{StaticResource TextSecondary}"
+                               FontSize="10" TextWrapping="Wrap"
+                               HorizontalAlignment="Center" TextAlignment="Center"
+                               Margin="0,8,0,0"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Main content (right) ── -->
+        <Border Grid.Column="1" Width="360" Margin="8" CornerRadius="8"
+                Background="{StaticResource CardBg}"
+                BorderBrush="{StaticResource BorderColor}"
+                BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.6" ShadowDepth="4"/>
+            </Border.Effect>
+
+            <StackPanel>
 
             <!-- ── Title bar ── -->
             <Border Background="{StaticResource SubtleBg}" CornerRadius="8,8,0,0"
@@ -84,6 +186,11 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button FontFamily="Segoe Fluent Icons" Content="&#xE9D2;" Width="22" Height="22"
+                                Background="Transparent" Foreground="{StaticResource TextSecondary}"
+                                BorderThickness="0" FontSize="11" Cursor="Hand"
+                                ToolTip="Usage history"
+                                Click="ChartButton_Click"/>
                         <Button FontFamily="Segoe Fluent Icons" Content="&#xE713;" Width="22" Height="22"
                                 Background="Transparent" Foreground="{StaticResource TextSecondary}"
                                 BorderThickness="0" FontSize="11" Cursor="Hand"
@@ -364,4 +471,5 @@
             </StackPanel>
         </StackPanel>
     </Border>
+</Grid>
 </Window>

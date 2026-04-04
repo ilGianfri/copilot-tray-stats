@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using CopilotTrayStats.Models;
 using CopilotTrayStats.Services;
 using CopilotTrayStats.ViewModels;
 using CopilotTrayStats.Views;
@@ -18,7 +19,9 @@ public partial class App : Application
     private MainWindow? _popup;
     private MainViewModel? _viewModel;
     private SettingsViewModel? _settingsViewModel;
+    private UsageHistoryViewModel? _usageHistoryViewModel;
     private CopilotApiService? _apiService;
+    private UsageHistoryService? _historyService;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -33,7 +36,6 @@ public partial class App : Application
 
         _viewModel = new MainViewModel(apiService);
         _viewModel.SetRefreshInterval(settings.RefreshIntervalMinutes);
-        _viewModel.OnSuccessfulRefresh = settingsService.SaveState;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
 
         // Restore last-known values immediately so the UI isn't blank on first open
@@ -41,13 +43,31 @@ public partial class App : Application
         if (cached is not null)
             _viewModel.ApplyCachedState(cached);
 
+        _historyService = new UsageHistoryService();
+        UsageHistoryService historyService = _historyService;
+
+        _viewModel.OnSuccessfulRefresh = state =>
+        {
+            settingsService.SaveState(state);
+            historyService.RecordEntry(new DailyUsageEntry
+            {
+                Date              = DateOnly.FromDateTime(DateTime.Today),
+                PremiumRemaining  = state.PremiumRemaining,
+                PremiumTotal      = state.PremiumTotal,
+                QuotaResetDateUtc = state.QuotaResetDateUtc,
+            });
+        };
+
         _settingsViewModel = new SettingsViewModel(settingsService);
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
+
+        _usageHistoryViewModel = new UsageHistoryViewModel(historyService);
 
         _popup = new MainWindow
         {
             DataContext = _viewModel,
-            SettingsViewModel = _settingsViewModel
+            SettingsViewModel = _settingsViewModel,
+            UsageHistoryViewModel = _usageHistoryViewModel,
         };
 
         _trayIcon = new TaskbarIcon

@@ -222,6 +222,7 @@ public partial class MainViewModel : ObservableObject
                 RawJson              = RawJson,
                 LastRefreshed        = LastRefreshed,
                 LastRefreshTime      = _lastRefreshTime.Value,
+                QuotaResetDateUtc    = data.QuotaResetDateUtc ?? data.QuotaResetDate,
             });
         }
         catch (OperationCanceledException)

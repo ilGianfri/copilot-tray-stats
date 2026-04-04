@@ -6,7 +6,9 @@ A Windows system-tray app that shows your GitHub Copilot premium request quota a
 
 - Tray icon changes color based on quota remaining (green / amber / red)
 - Popup window with remaining requests, reset date, Chat and Completions status
+- **Daily usage history** — bar chart of requests used per day since the last quota reset, shown as a slide-out panel inside the popup
 - Configurable refresh interval and run-on-startup via built-in settings
+- Last-known quota is restored immediately on launch (no blank state)
 - Tooltip shows a compact summary without opening the popup
 
 ## Prerequisites
@@ -29,22 +31,35 @@ dotnet run --project CopilotTrayStats.csproj
 
 After launching, the app lives in the system tray. Click the icon to open the popup. Right-click for a context menu with Refresh and Exit options.
 
-The settings window (gear icon in the popup title bar) lets you configure:
+The popup title bar has three buttons:
+
+| Button | Action |
+|--------|--------|
+| 📊 chart icon | Toggle the daily usage history panel |
+| ⚙ gear icon | Open settings |
+| ✕ | Close the popup |
+
+The **settings window** lets you configure:
 
 - **Run on startup** — registers the app in `HKCU\...\Run`
 - **Refresh interval** — 1 minute to 1 hour
+
+The **usage history panel** slides in to the left of the popup and shows one bar per day since the last quota reset. The bar height is proportional to requests used that day; today's bar is highlighted. Data is recorded automatically on every successful API refresh and persisted to `%AppData%\CopilotTrayStats\history.json`.
 
 ## Architecture
 
 ```
 App.xaml.cs
-  GitHubAuthService    shells out to `gh auth token`
-  CopilotApiService    GET https://api.github.com/copilot_internal/user
-  SettingsService      JSON in %AppData%\CopilotTrayStats\settings.json
-  MainViewModel        observable state, DispatcherTimer refresh
-  SettingsViewModel    refresh interval + Windows startup registry
-  MainWindow           popup window
-  TaskbarIcon          H.NotifyIcon.Wpf
+  GitHubAuthService        shells out to `gh auth token`
+  CopilotApiService        GET https://api.github.com/copilot_internal/user
+  SettingsService          JSON in %AppData%\CopilotTrayStats\settings.json
+                           + state.json (last-known quota snapshot)
+  UsageHistoryService      JSON in %AppData%\CopilotTrayStats\history.json
+  MainViewModel            observable state, PeriodicTimer refresh
+  SettingsViewModel        refresh interval + Windows startup registry
+  UsageHistoryViewModel    daily delta computation + bar chart data
+  MainWindow               popup window (inline history panel)
+  TaskbarIcon              H.NotifyIcon.Wpf
 ```
 
 No dependency injection container — `App.xaml.cs` constructs and wires all services.

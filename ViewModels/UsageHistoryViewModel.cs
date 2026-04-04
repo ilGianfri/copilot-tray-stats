@@ -1,0 +1,87 @@
+using CopilotTrayStats.Models;
+using CopilotTrayStats.Services;
+
+namespace CopilotTrayStats.ViewModels;
+
+public class UsageHistoryViewModel
+{
+    private readonly UsageHistoryService _historyService;
+    private const double MaxBarHeight = 100.0;
+
+    public List<ChartBarViewModel> Bars { get; private set; } = [];
+    public int TotalUsed { get; private set; }
+    public Action? CloseRequested { get; set; }
+
+    public UsageHistoryViewModel(UsageHistoryService historyService)
+    {
+        _historyService = historyService;
+    }
+
+    public void Reload()
+    {
+        List<DailyUsageEntry> history = _historyService.Load();
+
+        if (history.Count == 0)
+        {
+            Bars = [];
+            TotalUsed = 0;
+            return;
+        }
+
+        // Filter to entries since last reset.
+        // The most recent entry's QuotaResetDateUtc tells us when the cycle started.
+        DailyUsageEntry latest = history[^1];
+        DateOnly resetDate = DateOnly.MinValue;
+        if (!string.IsNullOrEmpty(latest.QuotaResetDateUtc)
+            && DateTime.TryParse(latest.QuotaResetDateUtc, out DateTime resetDt))
+        {
+            resetDate = DateOnly.FromDateTime(resetDt.ToLocalTime());
+        }
+
+        List<DailyUsageEntry> sinceReset = history
+            .Where(e => e.Date >= resetDate)
+            .OrderBy(e => e.Date)
+            .ToList();
+
+        // Compute per-day "requests used" as delta.
+        // For the first entry: total - remaining (usage up to that point in the cycle).
+        // For subsequent entries: previous.Remaining - current.Remaining.
+        int[] usedPerDay = new int[sinceReset.Count];
+        if (sinceReset.Count > 0)
+        {
+            DailyUsageEntry first = sinceReset[0];
+            usedPerDay[0] = Math.Max(0, first.PremiumTotal - first.PremiumRemaining);
+
+            for (int i = 1; i < sinceReset.Count; i++)
+            {
+                int delta = sinceReset[i - 1].PremiumRemaining - sinceReset[i].PremiumRemaining;
+                usedPerDay[i] = Math.Max(0, delta);
+            }
+        }
+
+        int maxUsed = usedPerDay.Length > 0 ? usedPerDay.Max() : 0;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+
+        Bars = sinceReset
+            .Select((entry, i) =>
+            {
+                int used = usedPerDay[i];
+                double height = maxUsed > 0 ? (double)used / maxUsed * MaxBarHeight : 0;
+                string dateLabel = entry.Date == today
+                    ? "Today"
+                    : entry.Date.ToString("MMM d");
+
+                return new ChartBarViewModel
+                {
+                    Date      = entry.Date,
+                    Used      = used,
+                    BarHeight = height,
+                    IsToday   = entry.Date == today,
+                    Tooltip   = $"{dateLabel}: {used} request{(used == 1 ? "" : "s")} used"
+                };
+            })
+            .ToList();
+
+        TotalUsed = usedPerDay.Sum();
+    }
+}
