@@ -28,18 +28,19 @@ public class UsageHistoryViewModel
             return;
         }
 
-        // Filter to entries since last reset.
-        // The most recent entry's QuotaResetDateUtc tells us when the cycle started.
+        // Filter to entries in the current quota cycle.
+        // QuotaResetDateUtc is the *next* reset date (end of current cycle),
+        // so the cycle started approximately one month before that.
         DailyUsageEntry latest = history[^1];
-        DateOnly resetDate = DateOnly.MinValue;
+        DateOnly cycleStart = DateOnly.MinValue;
         if (!string.IsNullOrEmpty(latest.QuotaResetDateUtc)
             && DateTime.TryParse(latest.QuotaResetDateUtc, out DateTime resetDt))
         {
-            resetDate = DateOnly.FromDateTime(resetDt.ToLocalTime());
+            cycleStart = DateOnly.FromDateTime(resetDt.ToLocalTime().AddMonths(-1));
         }
 
         List<DailyUsageEntry> sinceReset = history
-            .Where(e => e.Date >= resetDate)
+            .Where(e => e.Date >= cycleStart)
             .OrderBy(e => e.Date)
             .ToList();
 
