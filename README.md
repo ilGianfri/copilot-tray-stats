@@ -1,5 +1,11 @@
 # copilot-tray-stats
 
+[![Release](https://github.com/ilGianfri/copilot-tray-stats/actions/workflows/release.yml/badge.svg)](https://github.com/ilGianfri/copilot-tray-stats/actions/workflows/release.yml)
+
+<p align="center">
+  <img src=".github/screenshot.png" alt="copilot-tray-stats app screenshot" />
+</p>
+
 A Windows system-tray app that shows your GitHub Copilot premium request quota at a glance. It polls the GitHub Copilot API on a configurable interval and reflects your remaining requests through a color-coded tray icon.
 
 ## Features
