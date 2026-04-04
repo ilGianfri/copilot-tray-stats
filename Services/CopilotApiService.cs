@@ -20,23 +20,30 @@ public class CopilotApiService
     public CopilotApiService(GitHubAuthService authService)
     {
         _authService = authService;
-        _httpClient = new HttpClient();
+        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         _httpClient.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         _httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CopilotTrayStats/1.0");
     }
 
-    public async Task<(CopilotUserResponse Data, string RawJson)> GetUserDataAsync()
+    public async Task<(CopilotUserResponse Data, string RawJson)> GetUserDataAsync(CancellationToken ct = default)
     {
         string token = await _authService.GetTokenAsync();
 
-        using HttpRequestMessage request = new(HttpMethod.Get, ApiUrl);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        HttpResponseMessage response = await SendRequestAsync(token, ct);
 
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        // On 401 the cached token may be stale — invalidate and retry once
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            response.Dispose();
+            _authService.InvalidateToken();
+            token = await _authService.GetTokenAsync();
+            response = await SendRequestAsync(token, ct);
+        }
 
-        string json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync(ct);
+        response.Dispose();
 
         if (!response.IsSuccessStatusCode)
         {
@@ -56,5 +63,12 @@ public class CopilotApiService
         CopilotUserResponse? result = JsonSerializer.Deserialize<CopilotUserResponse>(json, s_deserializeOptions);
 
         return (result ?? throw new InvalidOperationException("Empty response from GitHub API."), prettyJson);
+    }
+
+    private Task<HttpResponseMessage> SendRequestAsync(string token, CancellationToken ct)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, ApiUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return _httpClient.SendAsync(request, ct);
     }
 }

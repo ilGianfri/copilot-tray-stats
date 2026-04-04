@@ -4,8 +4,13 @@ namespace CopilotTrayStats.Services;
 
 public class GitHubAuthService
 {
+    private string? _cachedToken;
+
     public async Task<string> GetTokenAsync()
     {
+        if (_cachedToken is not null)
+            return _cachedToken;
+
         using Process process = new()
         {
             StartInfo = new ProcessStartInfo
@@ -40,6 +45,12 @@ public class GitHubAuthService
                 $"Failed to retrieve GitHub token via 'gh auth token'. {detail}\nRun 'gh auth login' to authenticate.");
         }
 
-        return output.Trim();
+        _cachedToken = output.Trim();
+        return _cachedToken;
+    }
+
+    public void InvalidateToken()
+    {
+        _cachedToken = null;
     }
 }

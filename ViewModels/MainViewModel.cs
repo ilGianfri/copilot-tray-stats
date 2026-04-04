@@ -12,6 +12,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly CopilotApiService _apiService;
     private readonly DispatcherTimer _refreshTimer;
+    private CancellationTokenSource? _refreshCts;
 
     public MainViewModel(CopilotApiService apiService)
     {
@@ -112,18 +113,20 @@ public partial class MainViewModel : ObservableObject
 
     // ── Commands ─────────────────────────────────────────────────────────────
 
-    [RelayCommand(CanExecute = nameof(CanRefresh))]
+    [RelayCommand]
     private async Task RefreshAsync()
     {
-        if (IsLoading) return;
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshCts = new CancellationTokenSource();
+        var ct = _refreshCts.Token;
 
         IsLoading = true;
         ErrorMessage = null;
-        RefreshCommand.NotifyCanExecuteChanged();
 
         try
         {
-            (CopilotUserResponse? data, string? raw) = await _apiService.GetUserDataAsync();
+            (CopilotUserResponse? data, string? raw) = await _apiService.GetUserDataAsync(ct);
             RawJson = raw;
 
             Username = data.Login ?? "unknown";
@@ -157,20 +160,26 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(UsageLevel));
             OnPropertyChanged(nameof(UsagePercent));
         }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer refresh — leave UI state as-is
+            return;
+        }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
-            RawJson = ex.ToString();
-            TooltipText = "Copilot Stats — error";
+            if (!ct.IsCancellationRequested)
+            {
+                ErrorMessage = ex.Message;
+                RawJson = ex.ToString();
+                TooltipText = "Copilot Stats — error";
+            }
         }
         finally
         {
-            IsLoading = false;
-            RefreshCommand.NotifyCanExecuteChanged();
+            if (!ct.IsCancellationRequested)
+                IsLoading = false;
         }
     }
-
-    private bool CanRefresh() => !IsLoading;
 
     public void SetRefreshInterval(int minutes)
     {
