@@ -31,7 +31,7 @@ public class CopilotApiService
     {
         string token = await _authService.GetTokenAsync();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, ApiUrl);
+        using HttpRequestMessage request = new(HttpMethod.Get, ApiUrl);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -48,7 +48,7 @@ public class CopilotApiService
         string prettyJson = json;
         try
         {
-            using var doc = JsonDocument.Parse(json);
+            using JsonDocument doc = JsonDocument.Parse(json);
             prettyJson = JsonSerializer.Serialize(doc, s_prettyPrintOptions);
         }
         catch { /* keep raw */ }

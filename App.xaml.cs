@@ -1,11 +1,14 @@
+using System.Drawing;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CopilotTrayStats.Services;
 using CopilotTrayStats.ViewModels;
 using CopilotTrayStats.Views;
 using H.NotifyIcon;
+using Color = System.Windows.Media.Color;
 
 namespace CopilotTrayStats;
 
@@ -20,10 +23,10 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        var authService = new GitHubAuthService();
-        var apiService  = new CopilotApiService(authService);
+        GitHubAuthService authService = new();
+        CopilotApiService apiService = new(authService);
 
-        var settingsService = new SettingsService();
+        SettingsService settingsService = new();
         AppSettings settings = settingsService.Load();
 
         _viewModel = new MainViewModel(apiService);
@@ -33,8 +36,11 @@ public partial class App : Application
         _settingsViewModel = new SettingsViewModel(settingsService);
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
 
-        _popup = new MainWindow { DataContext = _viewModel };
-        _popup.SettingsViewModel = _settingsViewModel;
+        _popup = new MainWindow
+        {
+            DataContext = _viewModel,
+            SettingsViewModel = _settingsViewModel
+        };
 
         _trayIcon = new TaskbarIcon
         {
@@ -45,15 +51,15 @@ public partial class App : Application
         };
 
         // Context menu
-        var menu = new System.Windows.Controls.ContextMenu();
+        ContextMenu menu = new();
 
-        var refreshItem = new System.Windows.Controls.MenuItem { Header = "Refresh" };
+        MenuItem refreshItem = new() { Header = "Refresh" };
         refreshItem.Click += (_, _) => _viewModel.RefreshCommand.Execute(null);
         menu.Items.Add(refreshItem);
 
-        menu.Items.Add(new System.Windows.Controls.Separator());
+        menu.Items.Add(new Separator());
 
-        var exitItem = new System.Windows.Controls.MenuItem { Header = "Exit" };
+        MenuItem exitItem = new() { Header = "Exit" };
         exitItem.Click += (_, _) => ExitApp();
         menu.Items.Add(exitItem);
 
@@ -134,19 +140,19 @@ public partial class App : Application
         "c.225-.022.425-.027.612-.028h.366c.187 0 .387.006.612.028-.015-.146-.015-.277-.015-.409.015-.19.03-.365.06-.526" +
         "a9.29 9.29 0 00-.84-.044z";
 
-    private static System.Drawing.Icon CreateCopilotIcon(Color fill)
+    private static Icon CreateCopilotIcon(Color fill)
     {
         const int size = 32;
         const double viewBox = 24.0;
 
-        var rawGeometry = Geometry.Parse(CopilotSvgPath);
-        var pathGeometry = PathGeometry.CreateFromGeometry(rawGeometry);
+        Geometry rawGeometry = Geometry.Parse(CopilotSvgPath);
+        PathGeometry pathGeometry = PathGeometry.CreateFromGeometry(rawGeometry);
         pathGeometry.FillRule = FillRule.EvenOdd;
 
-        var brush = new SolidColorBrush(fill);
+        SolidColorBrush brush = new(fill);
         brush.Freeze();
 
-        var visual = new DrawingVisual();
+        DrawingVisual visual = new();
         using (DrawingContext dc = visual.RenderOpen())
         {
             double scale = size / viewBox;
@@ -155,16 +161,16 @@ public partial class App : Application
             dc.Pop();
         }
 
-        var rtb = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+        RenderTargetBitmap rtb = new(size, size, 96, 96, PixelFormats.Pbgra32);
         rtb.Render(visual);
 
-        var encoder = new PngBitmapEncoder();
+        PngBitmapEncoder encoder = new();
         encoder.Frames.Add(BitmapFrame.Create(rtb));
-        using var ms = new MemoryStream();
+        using MemoryStream ms = new();
         encoder.Save(ms);
         ms.Position = 0;
 
-        using var gdiBmp = new System.Drawing.Bitmap(ms);
+        using Bitmap gdiBmp = new(ms);
         return System.Drawing.Icon.FromHandle(gdiBmp.GetHicon());
     }
 

@@ -6,7 +6,7 @@ public class GitHubAuthService
 {
     public async Task<string> GetTokenAsync()
     {
-        using var process = new Process
+        using Process process = new()
         {
             StartInfo = new ProcessStartInfo
             {

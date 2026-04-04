@@ -42,7 +42,7 @@ public partial class MainWindow : Window
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         if (SettingsViewModel is null) return;
-        var win = new SettingsWindow { DataContext = SettingsViewModel };
+        SettingsWindow win = new() { DataContext = SettingsViewModel };
         SettingsViewModel.CloseRequested = () =>
         {
             SettingsViewModel.CloseRequested = null;
