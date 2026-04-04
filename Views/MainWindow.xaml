@@ -74,56 +74,79 @@
                 <!-- Chart area -->
                 <StackPanel Margin="12,10,12,12">
                     <Border Background="{StaticResource SubtleBg}" CornerRadius="6"
-                            Padding="12,12,12,8" MinHeight="130">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl x:Name="BarsItemsControl">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Width="32" Margin="2,0">
-                                            <Grid Height="100">
-                                                <Border VerticalAlignment="Bottom"
-                                                        Height="{Binding BarHeight}"
-                                                        MinHeight="2"
-                                                        CornerRadius="2,2,0,0"
-                                                        ToolTip="{Binding Tooltip}">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="{StaticResource TextSecondary}"/>
+                            Padding="0" MinHeight="130">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Y-axis labels -->
+                            <Grid Grid.Column="0" Height="100" Width="28"
+                                  Margin="0,12,4,0" VerticalAlignment="Top">
+                                <TextBlock x:Name="YAxisMax"
+                                           FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                           Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock x:Name="YAxisMid"
+                                           FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="0"
+                                           FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                           Foreground="{StaticResource TextSecondary}"/>
+                            </Grid>
+
+                            <!-- Bars -->
+                            <ScrollViewer Grid.Column="1" Margin="0,12,10,8"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl x:Name="BarsItemsControl">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Width="32" Margin="2,0">
+                                                <Grid Height="100">
+                                                    <Border VerticalAlignment="Bottom"
+                                                            Height="{Binding BarHeight}"
+                                                            MinHeight="2"
+                                                            CornerRadius="2,2,0,0"
+                                                            ToolTip="{Binding Tooltip}">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="{StaticResource TextSecondary}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                                        <Setter Property="Background" Value="{StaticResource TextPrimary}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding DateLabel}"
+                                                           FontSize="9" HorizontalAlignment="Center"
+                                                           Margin="0,4,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                                    <Setter Property="Background" Value="{StaticResource TextPrimary}"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                                                    <Setter Property="FontWeight" Value="SemiBold"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
-                                                    </Border.Style>
-                                                </Border>
-                                            </Grid>
-                                            <TextBlock Text="{Binding DateLabel}"
-                                                       FontSize="9" HorizontalAlignment="Center"
-                                                       Margin="0,4,0,0">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-                                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
                     <TextBlock x:Name="HistoryEmptyText"
                                Text="No usage data yet. Data is recorded each time the stats refresh."

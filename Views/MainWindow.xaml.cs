@@ -54,6 +54,11 @@ public partial class MainWindow : Window
         UsageHistoryViewModel.Reload();
 
         BarsItemsControl.ItemsSource = UsageHistoryViewModel.Bars;
+
+        int maxUsed = UsageHistoryViewModel.MaxUsed;
+        YAxisMax.Text = maxUsed.ToString();
+        YAxisMid.Text = (maxUsed / 2).ToString();
+
         if (UsageHistoryViewModel.Bars.Count == 0)
         {
             HistoryEmptyText.Visibility = Visibility.Visible;

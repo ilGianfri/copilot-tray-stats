@@ -10,6 +10,7 @@ public class UsageHistoryViewModel
 
     public List<ChartBarViewModel> Bars { get; private set; } = [];
     public int TotalUsed { get; private set; }
+    public int MaxUsed { get; private set; }
     public Action? CloseRequested { get; set; }
 
     public UsageHistoryViewModel(UsageHistoryService historyService)
@@ -39,10 +40,9 @@ public class UsageHistoryViewModel
             cycleStart = DateOnly.FromDateTime(resetDt.ToLocalTime().AddMonths(-1));
         }
 
-        List<DailyUsageEntry> sinceReset = history
+        List<DailyUsageEntry> sinceReset = [.. history
             .Where(e => e.Date >= cycleStart)
-            .OrderBy(e => e.Date)
-            .ToList();
+            .OrderBy(e => e.Date)];
 
         // Compute per-day "requests used" as delta.
         // For the first entry: total - remaining (usage up to that point in the cycle).
@@ -61,6 +61,7 @@ public class UsageHistoryViewModel
         }
 
         int maxUsed = usedPerDay.Length > 0 ? usedPerDay.Max() : 0;
+        MaxUsed = maxUsed;
         DateOnly today = DateOnly.FromDateTime(DateTime.Today);
 
         Bars = sinceReset

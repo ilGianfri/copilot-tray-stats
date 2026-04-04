@@ -7,5 +7,5 @@ public class ChartBarViewModel
     public double BarHeight { get; init; }
     public string Tooltip { get; init; } = "";
     public bool IsToday { get; init; }
-    public string DateLabel => Date.Day.ToString();
+    public string DateLabel => Date.ToString("dd\'/'MM");
 }
