@@ -453,12 +453,12 @@
                             Content="Refresh" Command="{Binding RefreshCommand}"/>
                 </Grid>
 
-                <!-- Loading indicator -->
+                <!-- Loading indicator (Hidden not Collapsed so it doesn't resize the window) -->
                 <TextBlock Text="Refreshing…" FontSize="11" Margin="0,8,0,0"
                            Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Visibility" Value="Hidden"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsLoading}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
