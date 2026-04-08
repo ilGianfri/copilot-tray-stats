@@ -74,7 +74,7 @@ public partial class App : Application
 
         _trayIcon = new TaskbarIcon
         {
-            ToolTipText = "Copilot Stats — loading…",
+            ToolTipText = _viewModel.TooltipText,
             Icon = CreateCopilotIcon(Colors.Gray),
             LeftClickCommand = new RelayCommand(TogglePopup),
             DoubleClickCommand = new RelayCommand(TogglePopup)

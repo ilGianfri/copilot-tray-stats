@@ -168,6 +168,7 @@
                 <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.6" ShadowDepth="4"/>
             </Border.Effect>
 
+            <Grid>
             <StackPanel>
 
             <!-- ── Title bar ── -->
@@ -453,21 +454,6 @@
                             Content="Refresh" Command="{Binding RefreshCommand}"/>
                 </Grid>
 
-                <!-- Loading indicator -->
-                <TextBlock Text="Refreshing…" FontSize="11" Margin="0,8,0,0"
-                           Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-
                 <!-- ── Debug expander ── -->
                 <Expander Margin="0,10,0,0" IsExpanded="False"
                           Visibility="{Binding IsDebugVisible, Converter={StaticResource BoolToVis}}">
@@ -493,6 +479,11 @@
 
             </StackPanel>
         </StackPanel>
+            <ProgressBar IsIndeterminate="True" Height="2" VerticalAlignment="Bottom"
+                         Background="{StaticResource BorderColor}" BorderThickness="0"
+                         Foreground="{StaticResource GoodBrush}" Margin="3,0,0,0"
+                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
     </Border>
 </Grid>
 </Window>
