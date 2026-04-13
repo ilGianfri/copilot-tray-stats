@@ -40,7 +40,7 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish CopilotTrayStats.csproj `
+          dotnet publish copilot-tray-stats/CopilotTrayStats.csproj `
             -c Release `
             -r win-x64 `
             --self-contained `

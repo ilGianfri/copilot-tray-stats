@@ -8,7 +8,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>CopilotTrayStats</AssemblyName>
     <RootNamespace>CopilotTrayStats</RootNamespace>
+    <ApplicationIcon>copilot.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="copilot.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
