@@ -61,7 +61,9 @@ public partial class App : Application
 
         _updateService = new UpdateService(authService);
         _settingsViewModel = new SettingsViewModel(settingsService, _updateService);
+        _viewModel.ShowUsedRequests = settings.ShowUsedRequests;
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
+        _settingsViewModel.ShowUsedRequestsChanged += show => _viewModel!.ShowUsedRequests = show;
 
         _usageHistoryViewModel = new UsageHistoryViewModel(historyService);
 

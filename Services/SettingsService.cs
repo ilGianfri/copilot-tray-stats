@@ -7,6 +7,7 @@ public class AppSettings
 {
     public int RefreshIntervalMinutes { get; set; } = 5;
     public bool RunOnStartup { get; set; } = false;
+    public bool ShowUsedRequests { get; set; } = false;
 }
 
 public class CachedState

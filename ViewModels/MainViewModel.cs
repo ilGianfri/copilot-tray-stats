@@ -52,6 +52,7 @@ public partial class MainViewModel : ObservableObject
     private string _planType = "—";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
     private int _premiumRemaining;
 
     [ObservableProperty]
@@ -60,6 +61,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsageLevel))]
     [NotifyPropertyChangedFor(nameof(UsagePercent))]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
     private int _premiumUsed;
 
     [ObservableProperty]
@@ -82,6 +84,11 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _rawJson = "(no data yet)";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayLabel))]
+    private bool _showUsedRequests;
 
     [ObservableProperty]
     private bool _isDebugVisible;
@@ -111,6 +118,10 @@ public partial class MainViewModel : ObservableObject
         PremiumTotal > 0 ? (double)PremiumUsed / PremiumTotal * 100.0 : 0;
 
     public bool HasOverage => OverageCount > 0;
+
+    public int DisplayCount => ShowUsedRequests ? PremiumUsed : PremiumRemaining;
+
+    public string DisplayLabel => ShowUsedRequests ? "Premium requests used" : "Premium requests";
 
     public UsageLevel UsageLevel
     {
@@ -268,9 +279,18 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        TooltipText = PremiumTotal > 0
-            ? $"Copilot ({Username}): {PremiumRemaining}/{PremiumTotal} premium requests left — resets {ResetAt}"
-            : $"Copilot ({Username}): No premium quota info available";
+        if (ShowUsedRequests)
+        {
+            TooltipText = PremiumTotal > 0
+                ? $"Copilot ({Username}): {PremiumUsed}/{PremiumTotal} premium requests used — resets {ResetAt}"
+                : $"Copilot ({Username}): No premium quota info available";
+        }
+        else
+        {
+            TooltipText = PremiumTotal > 0
+                ? $"Copilot ({Username}): {PremiumRemaining}/{PremiumTotal} premium requests left — resets {ResetAt}"
+                : $"Copilot ({Username}): No premium quota info available";
+        }
     }
 
     private static string FormatPlan(string? raw) =>
