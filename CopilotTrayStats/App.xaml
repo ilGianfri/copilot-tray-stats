@@ -6,6 +6,7 @@
     <Application.Resources>
 
         <conv:InverseBoolConverter x:Key="InvertBool"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <!-- Brushes -->
         <SolidColorBrush x:Key="GoodBrush"     Color="#2ea043"/>
