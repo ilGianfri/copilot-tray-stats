@@ -7,13 +7,13 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="CopilotTrayStats"
-    Publisher="CN=winuser"
-    Version="1.0.0.0" />
+    Name="9341Winuser.CopilotTrayStats"
+    Publisher="CN=E527F7F6-4142-4BB6-A244-A4C97158A19A"
+    Version="1.0.10.0" />
 
   <Properties>
-    <DisplayName>CopilotTrayStats</DisplayName>
-    <PublisherDisplayName>winuser</PublisherDisplayName>
+    <DisplayName>Copilot Tray Stats</DisplayName>
+    <PublisherDisplayName>Winuser</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
