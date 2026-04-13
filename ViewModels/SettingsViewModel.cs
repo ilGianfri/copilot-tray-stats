@@ -21,6 +21,7 @@ public partial class SettingsViewModel : ObservableObject
         _updateService = updateService;
         AppSettings s = settingsService.Load();
         _runOnStartup = GetStartupEnabled();
+        _showUsedRequests = s.ShowUsedRequests;
         _selectedRefreshOption = RefreshOptions.Find(o => o.Minutes == s.RefreshIntervalMinutes)
             ?? RefreshOptions.Find(o => o.Minutes == 5)!;
     }
@@ -42,7 +43,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private RefreshOption _selectedRefreshOption;
 
+    [ObservableProperty]
+    private bool _showUsedRequests;
+
     public Action<int>? RefreshIntervalChanged { get; set; }
+    public Action<bool>? ShowUsedRequestsChanged { get; set; }
     public Action? CloseRequested { get; set; }
 
     // ── Update checking ──────────────────────────────────────────────────────
@@ -123,8 +128,10 @@ public partial class SettingsViewModel : ObservableObject
         {
             RefreshIntervalMinutes = SelectedRefreshOption.Minutes,
             RunOnStartup = RunOnStartup,
+            ShowUsedRequests = ShowUsedRequests,
         });
         RefreshIntervalChanged?.Invoke(SelectedRefreshOption.Minutes);
+        ShowUsedRequestsChanged?.Invoke(ShowUsedRequests);
         CloseRequested?.Invoke();
     }
 
