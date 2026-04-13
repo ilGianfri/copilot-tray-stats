@@ -52,14 +52,21 @@ public partial class MainViewModel : ObservableObject
     private string _planType = "—";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
+    [NotifyPropertyChangedFor(nameof(UsageLevel))]
     private int _premiumRemaining;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
     private int _premiumTotal;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsageLevel))]
     [NotifyPropertyChangedFor(nameof(UsagePercent))]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
     private int _premiumUsed;
 
     [ObservableProperty]
@@ -105,10 +112,31 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _completionsStatus = "\u2014";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayLabel))]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
+    private bool _showUsedRequests;
+
     // ── Computed Properties ──────────────────────────────────────────────────
 
     public double UsagePercent =>
         PremiumTotal > 0 ? (double)PremiumUsed / PremiumTotal * 100.0 : 0;
+
+    public string DisplayLabel => ShowUsedRequests ? "Premium requests used" : "Premium requests remaining";
+
+    public int DisplayCount => ShowUsedRequests ? PremiumUsed : PremiumRemaining;
+
+    public string DisplayPercentLabel
+    {
+        get
+        {
+            if (PremiumTotal <= 0) return "";
+            double usedPct = UsagePercent;
+            double shownPct = ShowUsedRequests ? usedPct : (100.0 - usedPct);
+            return $"({shownPct:F1}%)";
+        }
+    }
 
     public bool HasOverage => OverageCount > 0;
 
@@ -130,6 +158,11 @@ public partial class MainViewModel : ObservableObject
 
     public bool IsStale(int minutes) =>
         _lastRefreshTime is null || (DateTime.Now - _lastRefreshTime.Value).TotalMinutes >= minutes;
+
+    public void SetShowUsedRequests(bool showUsed)
+    {
+        ShowUsedRequests = showUsed;
+    }
 
     public void ApplyCachedState(CachedState state)
     {
