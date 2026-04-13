@@ -15,6 +15,65 @@
     <!-- UsageBar references the ViewModel enum so must stay in Window.Resources -->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Thin modern horizontal scrollbar -->
+        <Style x:Key="ThinScrollBar" TargetType="ScrollBar">
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Border Background="#21262d" CornerRadius="3" Height="6" VerticalAlignment="Center"/>
+                            <Track Name="PART_Track" IsDirectionReversed="False">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageLeftCommand"
+                                                  Opacity="0" Focusable="False"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#484f58" CornerRadius="3" Height="6"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageRightCommand"
+                                                  Opacity="0" Focusable="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ThinScrollViewer" TargetType="ScrollViewer">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollViewer">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <ScrollContentPresenter Grid.Row="0" Margin="{TemplateBinding Padding}"/>
+                            <ScrollBar Grid.Row="1" Name="PART_HorizontalScrollBar"
+                                       Style="{StaticResource ThinScrollBar}"
+                                       Orientation="Horizontal"
+                                       Margin="0,3,0,0"
+                                       ViewportSize="{TemplateBinding ViewportWidth}"
+                                       Maximum="{TemplateBinding ScrollableWidth}"
+                                       Minimum="0"
+                                       Value="{TemplateBinding HorizontalOffset}"
+                                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="UsageBar" TargetType="ProgressBar">
             <Setter Property="Height"          Value="8"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -41,7 +100,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ── History panel (left, toggled by chart button) ── -->
-        <Border x:Name="HistoryPanel" Grid.Column="0" Width="280" Margin="8,8,4,8"
+        <Border x:Name="HistoryPanel" Grid.Column="0" Width="400" Margin="8,8,4,8"
                 Visibility="Collapsed" CornerRadius="8"
                 Background="{StaticResource CardBg}"
                 BorderBrush="{StaticResource BorderColor}"
@@ -74,7 +133,7 @@
                 <!-- Chart area -->
                 <StackPanel Margin="12,10,12,12">
                     <Border Background="{StaticResource SubtleBg}" CornerRadius="6"
-                            Padding="0" MinHeight="130">
+                            Padding="0" MinHeight="210">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -82,7 +141,7 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Y-axis labels -->
-                            <Grid Grid.Column="0" Height="100" Width="28"
+                            <Grid Grid.Column="0" Height="180" Width="28"
                                   Margin="0,12,4,0" VerticalAlignment="Top">
                                 <TextBlock x:Name="YAxisMax"
                                            FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -97,6 +156,7 @@
 
                             <!-- Bars -->
                             <ScrollViewer Grid.Column="1" Margin="0,12,10,8"
+                                          Style="{StaticResource ThinScrollViewer}"
                                           HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl x:Name="BarsItemsControl">
@@ -108,7 +168,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Width="32" Margin="2,0">
-                                                <Grid Height="100">
+                                                <Grid Height="210">
                                                     <Border VerticalAlignment="Bottom"
                                                             Height="{Binding BarHeight}"
                                                             MinHeight="2"
@@ -285,14 +345,14 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Style="{StaticResource LabelStyle}" Text="Premium requests" VerticalAlignment="Center"/>
+                        <TextBlock Style="{StaticResource LabelStyle}" Text="{Binding DisplayLabel, Mode=OneWay}" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" FontSize="12" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimary}">
-                            <Run Text="{Binding PremiumRemaining, Mode=OneWay}"/>
+                            <Run Text="{Binding DisplayCount, Mode=OneWay}"/>
                             <Run Text=" / " Foreground="{StaticResource TextSecondary}"/>
                             <Run Text="{Binding PremiumTotal, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
                             <Run Text=" " Foreground="{StaticResource TextSecondary}"/>
-                            <Run Text="{Binding PercentRemainingLabel, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
+                            <Run Text="{Binding DisplayPercentLabel, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
                         </TextBlock>
                     </Grid>
 

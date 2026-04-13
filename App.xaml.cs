@@ -36,6 +36,7 @@ public partial class App : Application
         AppSettings settings = settingsService.Load();
 
         _viewModel = new MainViewModel(apiService);
+        _viewModel.SetShowUsedRequests(settings.ShowUsedRequests);
         _viewModel.SetRefreshInterval(settings.RefreshIntervalMinutes);
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
 
@@ -62,6 +63,7 @@ public partial class App : Application
         _updateService = new UpdateService(authService);
         _settingsViewModel = new SettingsViewModel(settingsService, _updateService);
         _settingsViewModel.RefreshIntervalChanged += mins => _viewModel.SetRefreshInterval(mins);
+        _settingsViewModel.ShowUsedRequestsChanged += showUsed => _viewModel.SetShowUsedRequests(showUsed);
 
         _usageHistoryViewModel = new UsageHistoryViewModel(historyService);
 
@@ -147,9 +149,6 @@ public partial class App : Application
 
     private void ExitApp()
     {
-        _trayIcon?.Dispose();
-        _apiService?.Dispose();
-        _updateService?.Dispose();
         Shutdown();
     }
 

@@ -6,7 +6,7 @@ namespace CopilotTrayStats.ViewModels;
 public class UsageHistoryViewModel
 {
     private readonly UsageHistoryService _historyService;
-    private const double MaxBarHeight = 100.0;
+    private const double MaxBarHeight = 210.0;
 
     public List<ChartBarViewModel> Bars { get; private set; } = [];
     public int TotalUsed { get; private set; }
