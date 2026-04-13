@@ -292,7 +292,7 @@
                             <Run Text=" / " Foreground="{StaticResource TextSecondary}"/>
                             <Run Text="{Binding PremiumTotal, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
                             <Run Text=" " Foreground="{StaticResource TextSecondary}"/>
-                            <Run Text="{Binding PercentRemainingLabel, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
+                            <Run Text="{Binding DisplayPercentLabel, Mode=OneWay}" Foreground="{StaticResource TextSecondary}"/>
                         </TextBlock>
                     </Grid>
 

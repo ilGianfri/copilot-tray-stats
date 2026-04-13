@@ -53,15 +53,20 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
+    [NotifyPropertyChangedFor(nameof(UsageLevel))]
     private int _premiumRemaining;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
     private int _premiumTotal;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsageLevel))]
     [NotifyPropertyChangedFor(nameof(UsagePercent))]
     [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
     private int _premiumUsed;
 
     [ObservableProperty]
@@ -86,11 +91,6 @@ public partial class MainViewModel : ObservableObject
     private string _rawJson = "(no data yet)";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayCount))]
-    [NotifyPropertyChangedFor(nameof(DisplayLabel))]
-    private bool _showUsedRequests;
-
-    [ObservableProperty]
     private bool _isDebugVisible;
 
     [ObservableProperty]
@@ -112,16 +112,33 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _completionsStatus = "\u2014";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayLabel))]
+    [NotifyPropertyChangedFor(nameof(DisplayCount))]
+    [NotifyPropertyChangedFor(nameof(DisplayPercentLabel))]
+    private bool _showUsedRequests;
+
     // ── Computed Properties ──────────────────────────────────────────────────
 
     public double UsagePercent =>
         PremiumTotal > 0 ? (double)PremiumUsed / PremiumTotal * 100.0 : 0;
 
-    public bool HasOverage => OverageCount > 0;
+    public string DisplayLabel => ShowUsedRequests ? "Premium requests used" : "Premium requests remaining";
 
     public int DisplayCount => ShowUsedRequests ? PremiumUsed : PremiumRemaining;
 
-    public string DisplayLabel => ShowUsedRequests ? "Premium requests used" : "Premium requests";
+    public string DisplayPercentLabel
+    {
+        get
+        {
+            if (PremiumTotal <= 0) return "";
+            double usedPct = UsagePercent;
+            double shownPct = ShowUsedRequests ? usedPct : (100.0 - usedPct);
+            return $"({shownPct:F1}%)";
+        }
+    }
+
+    public bool HasOverage => OverageCount > 0;
 
     public UsageLevel UsageLevel
     {
@@ -141,6 +158,11 @@ public partial class MainViewModel : ObservableObject
 
     public bool IsStale(int minutes) =>
         _lastRefreshTime is null || (DateTime.Now - _lastRefreshTime.Value).TotalMinutes >= minutes;
+
+    public void SetShowUsedRequests(bool showUsed)
+    {
+        ShowUsedRequests = showUsed;
+    }
 
     public void ApplyCachedState(CachedState state)
     {
@@ -279,18 +301,9 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (ShowUsedRequests)
-        {
-            TooltipText = PremiumTotal > 0
-                ? $"Copilot ({Username}): {PremiumUsed}/{PremiumTotal} premium requests used — resets {ResetAt}"
-                : $"Copilot ({Username}): No premium quota info available";
-        }
-        else
-        {
-            TooltipText = PremiumTotal > 0
-                ? $"Copilot ({Username}): {PremiumRemaining}/{PremiumTotal} premium requests left — resets {ResetAt}"
-                : $"Copilot ({Username}): No premium quota info available";
-        }
+        TooltipText = PremiumTotal > 0
+            ? $"Copilot ({Username}): {PremiumRemaining}/{PremiumTotal} premium requests left — resets {ResetAt}"
+            : $"Copilot ({Username}): No premium quota info available";
     }
 
     private static string FormatPlan(string? raw) =>
