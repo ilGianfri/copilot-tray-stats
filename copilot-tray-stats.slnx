@@ -9,5 +9,5 @@
   <Project Path="CopilotTrayStats.Package/CopilotTrayStats.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="d71eef9a-01e3-4d8a-877a-3c613e49a77b">
     <Deploy />
   </Project>
-  <Project Path="copilot-tray-stats/CopilotTrayStats.csproj" />
+  <Project Path="CopilotTrayStats/CopilotTrayStats.csproj" />
 </Solution>

@@ -58,7 +58,7 @@
     <NoWarn>$(NoWarn);NU1702</NoWarn>
     <PackageCertificateThumbprint>7F7F6B19BD49ACCAA73F438B0B642E3B0FBAFB23</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>CopilotTrayStats.Package_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <EntryPointProjectUniqueName>..\copilot-tray-stats\CopilotTrayStats.csproj</EntryPointProjectUniqueName>
+    <EntryPointProjectUniqueName>..\CopilotTrayStats\CopilotTrayStats.csproj</EntryPointProjectUniqueName>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -124,6 +124,6 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\copilot-tray-stats\CopilotTrayStats.csproj" />
+    <ProjectReference Include="..\CopilotTrayStats\CopilotTrayStats.csproj" />
   </ItemGroup>
 </Project>
