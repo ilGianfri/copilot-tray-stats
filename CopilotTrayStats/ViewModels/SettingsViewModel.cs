@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using CopilotTrayStats.Services;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace CopilotTrayStats.ViewModels;
 
@@ -14,6 +16,20 @@ public partial class SettingsViewModel : ObservableObject
     private readonly UpdateService _updateService;
     private const string StartupKey = "CopilotTrayStats";
     private const string StartupRegPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string StartupTaskId = "CopilotTrayStatsStartupTask";
+
+    // Detect MSIX packaging via kernel32 — avoids a WinRT call just for this check.
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetCurrentPackageFullName(ref int packageFullNameLength, StringBuilder? packageFullName);
+    private static readonly bool _isPackaged = IsRunningPackaged();
+    private static bool IsRunningPackaged()
+    {
+        int len = 0;
+        return GetCurrentPackageFullName(ref len, null) != 15700; // APPMODEL_ERROR_NO_PACKAGE
+    }
+
+    public static bool IsPackaged => _isPackaged;
+    public static bool IsNotPackaged => !_isPackaged;
 
     public SettingsViewModel(SettingsService settingsService, UpdateService updateService)
     {
@@ -121,9 +137,9 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Save()
+    private async Task SaveAsync()
     {
-        SetStartupEnabled(RunOnStartup);
+        await SetStartupEnabledAsync(RunOnStartup);
         _settingsService.Save(new AppSettings
         {
             RefreshIntervalMinutes = SelectedRefreshOption.Minutes,
@@ -140,12 +156,33 @@ public partial class SettingsViewModel : ObservableObject
 
     private static bool GetStartupEnabled()
     {
+        if (_isPackaged)
+        {
+            var task = Task.Run(async () =>
+                await Windows.ApplicationModel.StartupTask.GetAsync(StartupTaskId).AsTask()
+            ).GetAwaiter().GetResult();
+            return task.State is Windows.ApplicationModel.StartupTaskState.Enabled
+                                or Windows.ApplicationModel.StartupTaskState.EnabledByPolicy;
+        }
+
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(StartupRegPath, false);
         return key?.GetValue(StartupKey) is not null;
     }
 
-    private static void SetStartupEnabled(bool enabled)
+    private static async Task SetStartupEnabledAsync(bool enabled)
     {
+        if (_isPackaged)
+        {
+            var task = await Task.Run(async () =>
+                await Windows.ApplicationModel.StartupTask.GetAsync(StartupTaskId).AsTask()
+            );
+            if (enabled)
+                await task.RequestEnableAsync().AsTask();
+            else
+                task.Disable();
+            return;
+        }
+
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(StartupRegPath, true);
         if (key is null) return;
         if (enabled)
